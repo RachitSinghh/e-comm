@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ShoppingBag } from "lucide-react";
+import { Heart, ShoppingBag } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { Button } from "@/components/ui/button";
 
@@ -14,14 +14,14 @@ const Header = () => {
             <ShoppingBag className="h-6 w-6 text-primary" />
             <span className="text-xl font-bold">ShopHub</span>
           </Link>
-          
+
           <div className="flex items-center gap-2">
             <Link to="/">
               <Button variant="ghost">Products</Button>
             </Link>
             <Link to="/cart">
-              <Button 
-                variant={totalItems > 0 ? "default" : "outline"} 
+              <Button
+                variant={totalItems > 0 ? "default" : "outline"}
                 className="relative"
               >
                 <ShoppingBag className="h-4 w-4 mr-2" />
@@ -32,6 +32,11 @@ const Header = () => {
                   </span>
                 )}
               </Button>
+              <Link to="/">
+                <Button variant="ghost">
+                  <Heart className="h-4 w-4 ml-2 mr-2" />
+                </Button>
+              </Link>
             </Link>
           </div>
         </nav>
