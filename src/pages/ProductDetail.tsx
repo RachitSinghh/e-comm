@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCart } from "@/contexts/CartContext";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface Product {
   id: number;
@@ -30,7 +30,9 @@ const fetchProduct = async (id: string): Promise<Product> => {
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { addToCart, items } = useCart();
+  // const [addToWishList, setAddToWishList] = useState[];
   const [quantity, setQuantity] = useState(1);
+  const [isInWishList, setIsInWishlist] = useState(false);
 
   const { data: product, isLoading } = useQuery({
     queryKey: ["product", id],
@@ -38,11 +40,21 @@ const ProductDetail = () => {
     enabled: !!id,
   });
 
+  useEffect(() => {
+    if (product) {
+      const wishlist = JSON.parse(localStorage.getItem("wishlist") || "[]");
+      const isProductInWishList = wishlist.some(
+        (item: Product) => item.id === product.id
+      );
+      setIsInWishlist(isProductInWishList);
+    }
+  }, [product]);
+
   const cartItem = items.find((item) => item.id === product?.id);
 
   const handleAddToCart = () => {
     if (!product) return;
-    
+
     for (let i = 0; i < quantity; i++) {
       addToCart({
         id: product.id,
@@ -51,9 +63,38 @@ const ProductDetail = () => {
         image: product.image,
       });
     }
-    
-    toast.success(`Added ${quantity} ${quantity === 1 ? 'item' : 'items'} to cart`);
+
+    toast.success(
+      `Added ${quantity} ${quantity === 1 ? "item" : "items"} to cart`
+    );
     setQuantity(1);
+  };
+
+  const handleToggleWishlist = () => {
+    if (!product) return;
+
+    // get exisiting wishlist from localStorage
+
+    const wishlist = JSON.parse(localStorage.getItem("wishlist"));
+
+    // check if product already exists in wishList
+    const existingIndex = wishlist.findIndex(
+      (item: Product) => item.id === product.id
+    );
+
+    if (existingIndex !== -1) {
+      wishlist.splice(existingIndex, 1);
+      setIsInWishlist(false);
+      toast.success("Removed from wishlist");
+    } else {
+      // Add to wishlist
+      wishlist.push(product);
+      setIsInWishlist(true);
+      toast.success("Added to wishlist");
+    }
+
+    // Save updated wishlist to localStorage
+    localStorage.setItem("wishlist", JSON.stringify(wishlist));
   };
 
   if (isLoading) {
@@ -143,7 +184,9 @@ const ProductDetail = () => {
                   >
                     <Minus className="h-4 w-4" />
                   </Button>
-                  <span className="w-12 text-center font-semibold">{quantity}</span>
+                  <span className="w-12 text-center font-semibold">
+                    {quantity}
+                  </span>
                   <Button
                     variant="outline"
                     size="icon"
@@ -163,9 +206,20 @@ const ProductDetail = () => {
                 Add to Cart
               </Button>
 
+              <Button
+                onClick={handleToggleWishlist}
+                variant={isInWishList ? 'default' : 'outline'}
+                className="w-full text-lg py-6"
+                size="lg"
+              >
+                <ShoppingCart className="mr-2 h-5 w-5" />
+                WishList
+              </Button>
+
               {cartItem && (
                 <p className="text-sm text-center text-muted-foreground">
-                  {cartItem.quantity} {cartItem.quantity === 1 ? 'item' : 'items'} already in cart
+                  {cartItem.quantity}{" "}
+                  {cartItem.quantity === 1 ? "item" : "items"} already in cart
                 </p>
               )}
             </Card>
